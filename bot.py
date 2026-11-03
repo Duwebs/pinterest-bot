@@ -1,6 +1,6 @@
 import telebot
 import requests
-from bs4вання import BeautifulSoup # ya BeautifulSoup
+from bs4 import BeautifulSoup
 
 TOKEN = "9054688908:AAFFMvMRvIqMPiBR4QNfA4xSnuKTs390CNE"
 bot = telebot.TeleBot(TOKEN)
@@ -9,26 +9,23 @@ bot = telebot.TeleBot(TOKEN)
 def send_welcome(message):
     bot.reply_to(message, "Hello! Main Pinterest Image Downloader Bot hoon. Mujhe koi bhi Pinterest ka link bhejo, main image nikal kar dunga!")
 
-@bot.message_handler(func=lambda message: "pinterest.com" in message.text or "pin.it" in message.text)
+@bot.message_handler(func=lambda message: message.text and ("pinterest.com" in message.text or "pin.it" in message.text))
 def download_pinterest(message):
     url = message.text.strip()
     sent_msg = bot.reply_to(message, "🔍 Pinterest link process ho raha hai...")
     
     try:
-        # Short link (pin.it) ko expand karne ke liye headers aur redirect handle karna
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
         }
         session = requests.Session()
         response = session.get(url, headers=headers, allow_redirects=True, timeout=10)
         
-        # BeautifulSoup se OpenGraph image tag dhundna
         soup = BeautifulSoup(response.text, 'html.parser')
         img_tag = soup.find('meta', property='og:image')
         
         if img_tag and img_tag.get('content'):
             img_url = img_tag['content']
-            # Kai baar Pinterest low-res image deta hai, high-res ke liye URL modify kar sakte hain ya direct bhej sakte hain
             bot.send_photo(message.chat.id, img_url, caption="✅ Yeh lijiye aapki Pinterest image!")
             bot.delete_message(message.chat.id, sent_msg.message_id)
         else:
